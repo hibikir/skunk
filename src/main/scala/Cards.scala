@@ -10,11 +10,9 @@ case object Wild extends Suit //4 1s
 
 case class Player(name:String, position:Int)
 
-case class Card(int:Number,suit:Suit,id:Int = 1){
+case class Card(number:Int,suit:Suit,id:Int = 1){
   def canBePlayedOn(card:Card) = suit == Wild || suit == card.suit
 }
-
-case class Play(player:Player,card:Card)
 
 object Deck {
   def apply():List[Card] = {
