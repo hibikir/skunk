@@ -25,3 +25,27 @@ object Deck {
     seq.toList
   }
 }
+
+case class Play(card: Card, player: Player)
+
+case class Trick(plays: Seq[Play] = Nil) {
+  private val orderedPlays = {
+    plays match {
+      case Nil => Nil
+      case x =>
+        val suit = x.head.card.suit
+        val followedSuit = plays.filter(p => p.card.suit == suit || p.card.suit == Wild).sortBy(-_.card.number)
+        followedSuit ++
+          plays.filter(!followedSuit.contains(_)).sortBy(-_.card.number)
+    }
+  }
+  val newLeader = orderedPlays match {
+    case Nil => None
+    case _ => Some(orderedPlays.head.player)
+  }
+
+  val newSkunk = orderedPlays match {
+    case Nil => None
+    case _ => Some(orderedPlays.last.player)
+  }
+}
