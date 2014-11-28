@@ -1,6 +1,7 @@
 import org.scalatest.FunSpec
+import org.scalatest.prop.PropertyChecks
 
-class GameSpec extends FunSpec{
+class GameSpec extends FunSpec with PropertyChecks{
 
   val players = 0.to(10).map(x=>Player(x.toString,x))
   describe("a deal") {
@@ -29,7 +30,6 @@ class GameSpec extends FunSpec{
         Play(Card(10, Owl), players(3))
 
       ))
-      println(trick.orderedPlays)
       assert(trick.newLeader.get == players(1))
       assert(trick.newSkunk.get == players(2))
 
@@ -42,7 +42,6 @@ class GameSpec extends FunSpec{
         Play(Card(10, Turtle), players(3))
 
       ))
-      println(trick.orderedPlays)
       assert(trick.newLeader.get == players(3))
       assert(trick.newSkunk.get == players(0))
 
@@ -56,7 +55,6 @@ class GameSpec extends FunSpec{
         Play(Card(10, Parrot), players(3))
 
       ))
-      println(trick.orderedPlays)
       assert(trick.newLeader.get == players(0))
       assert(trick.newSkunk.get == players(2))
 
@@ -70,10 +68,35 @@ class GameSpec extends FunSpec{
         Play(Card(10, Turtle), players(3))
 
       ))
-      println(trick.orderedPlays)
       assert(trick.newLeader.get == players(3))
       assert(trick.newSkunk.get == players(2))
 
+    }
+  }
+  describe("a player"){
+    val playerStates = Dealer.deal(players.take(4))
+    it("will play a card on an empty trick if he is the leader"){
+      val p = playerStates(0).copy(state = Leader)
+      0.to(100).foreach{ x=>
+        val (trick,p2) = p.play(Trick())
+        assert(trick.plays.size ==1)
+        assert(p.hand.contains(trick.plays.head.card))
+        assert(trick.plays.head.player==p.player)
+      }
+    }
+
+    it("will follow suit if it can"){
+      val p = playerStates(0)
+      0.to(100).foreach{ x=>
+        val (trick,p2) = p.play(Trick(Seq(Play(Card(1,Turtle),players(2)))))
+        assert(trick.plays.size ==2)
+        val lastPlay = trick.plays.last
+        assert(p.hand.contains(lastPlay.card))
+        assert(lastPlay.player==p.player)
+        if(lastPlay.card.suit != Turtle && lastPlay.card.suit !=Wild){
+          assert(p.hand.forall(_.suit!= Turtle))
+        }
+      }
     }
   }
 }
