@@ -99,4 +99,16 @@ class GameSpec extends FunSpec with PropertyChecks{
       }
     }
   }
+  
+  describe("a game"){
+    it("finishes when a player has no cards in their hand"){
+      val results = new Game(players.take(4)).play
+      assert(results.size ==4)
+      assert(results.exists(_.hand.size==0))
+      assert((results.map(_.hand.size).sum-2) %3 ==0)
+      results.foreach { x =>
+        println(s"${x.player.position} - ${x.hand.size} - ${x.tricks.size}")
+      }
+    }
+  }
 }

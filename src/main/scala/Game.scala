@@ -5,7 +5,7 @@ case object Normal extends State
 case object Leader extends State
 case object Skunk extends State
 
-case class PlayerState(player: Player, hand: Seq[Card], tricks: Seq[Card] = Seq(), state: State = Normal) {
+case class PlayerState(player: Player, hand: Seq[Card], tricks: Seq[Seq[Card]] = Seq(), state: State = Normal) {
   def play(trick: Trick): (Trick, PlayerState) = {
     state match {
       case Leader => val card = selectCardAtRandom(hand)
@@ -38,7 +38,7 @@ case object Dealer {
 
 class Game(players: Seq[Player]) {
   
-  def play: Unit = {
+  def play: Seq[PlayerState] = {
     val playerStates  = Dealer.deal(players)
     play(playerStates.updated(0,playerStates.head.copy(state=Leader)))
   }
@@ -62,16 +62,21 @@ class Game(players: Seq[Player]) {
   private def updatePlayerStatus(leader: Player, trick: Trick, players: Seq[PlayerState]): Seq[PlayerState] = {
     if (trick.newLeader == None) players.map(_.copy(state = Normal))
     else players.map { p =>
-      if (p.player == trick.newLeader.get) p.copy(state = Leader)
-      else if (p.player == trick.newSkunk.get) p.copy(state = Skunk)
+      val trickCards = trick.plays.map(_.card)
+      if (p.player == trick.newLeader.get) p.copy( state = Leader)
+      else if (p.player == trick.newSkunk.get){
+        val newTricks = p.tricks :+ trickCards
+        p.copy(tricks=newTricks,state = Skunk)
+      } 
       else p.copy(state = Normal)
     }
   }
 
-  private def turnOrder(leader: PlayerState, allPlayers: Seq[PlayerState]): Seq[PlayerState] = ???
-
-  /*{
+  private def turnOrder(leader: PlayerState, allPlayers: Seq[PlayerState]): Seq[PlayerState] =
+  {
     val initialPosition = leader.player.position
-    
-  }*/
+    val sorted = allPlayers.sortBy(_.player.position)
+    if (initialPosition == 0) sorted 
+    else sorted.slice(initialPosition,allPlayers.size) ++ sorted.slice(0,initialPosition)
+  }
 }
